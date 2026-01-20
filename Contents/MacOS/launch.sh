@@ -67,7 +67,7 @@ while true; do
   sleep 10
 
   # Check if Electron is still running
-  if ! ps -p $ELECTRON_PID > /dev/null 2>&1; then
+  if ! ps -p "$ELECTRON_PID" > /dev/null 2>&1; then
     echo "Electron process (PID: $ELECTRON_PID) has exited"
     echo "Cleaning up dev server..."
     kill $NPM_PID 2>/dev/null
