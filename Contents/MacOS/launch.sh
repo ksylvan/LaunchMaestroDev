@@ -30,23 +30,47 @@ git checkout -f package-lock.json
 
 # Start the dev server in background
 VITE_PORT="${VITE_PORT:-5199}" npm run dev &
-DEV_PID=$!
-sleep 120
+NPM_PID=$!
 
-echo "Dev server started with PID $DEV_PID"
+echo "Starting dev server (npm PID: $NPM_PID)"
+echo "Waiting for Electron to launch..."
 
-# Monitor for Electron process with VITE_PORT=5199
-while true; do
+# Wait for Electron to actually start (give it up to 3 minutes)
+ELECTRON_PID=""
+for i in {1..36}; do
   sleep 5
-  if ! ps eww -p $DEV_PID > /dev/null 2>&1; then
-    echo "Dev server process died, exiting monitor"
+
+  # Find the Electron process by looking for the actual Electron binary
+  # running from the Maestro directory
+  FOUND_PID=$(pgrep -f "Electron.*${MAESTRO_WORKTREE_DIR}" | head -n 1)
+
+  if [ -n "$FOUND_PID" ]; then
+    ELECTRON_PID=$FOUND_PID
+    echo "Electron started with PID $ELECTRON_PID after $((i * 5)) seconds"
     break
   fi
 
-  # shellcheck disable=SC2009
-  if ! ps eww | grep -q "VITE_PORT=5199.*electron"; then
-    echo "No Electron window found for VITE_PORT=5199, cleaning up..."
-    kill $DEV_PID 2>/dev/null
+  echo "Still waiting for Electron to launch... ($((i * 5))s elapsed)"
+done
+
+if [ -z "$ELECTRON_PID" ]; then
+  echo "ERROR: Electron failed to start within 3 minutes"
+  echo "Cleaning up npm process and exiting..."
+  kill $NPM_PID 2>/dev/null
+  pkill -f "worktrees/Maestro/preview"
+  exit 1
+fi
+
+# Monitor: Keep running as long as Electron is alive
+echo "Monitoring Electron process (PID: $ELECTRON_PID)..."
+while true; do
+  sleep 10
+
+  # Check if Electron is still running
+  if ! ps -p $ELECTRON_PID > /dev/null 2>&1; then
+    echo "Electron process (PID: $ELECTRON_PID) has exited"
+    echo "Cleaning up dev server..."
+    kill $NPM_PID 2>/dev/null
     pkill -f "worktrees/Maestro/preview"
     break
   fi
