@@ -1,16 +1,18 @@
-# Maestro Launcher
+# 🎼 Maestro Launcher
 
-A macOS application launcher for Maestro development that runs your worktree in a dev server.
+> A macOS application launcher for [Maestro](https://github.com/pedramamini/Maestro) development that runs your worktree in a dev server.
+
+Quickly launch and test your Maestro development environment with a single double-click! Perfect for working with [Maestro Playbooks](https://github.com/pedramamini/Maestro-Playbooks) in a live development environment.
 
 ## What It Does
 
 This creates a double-clickable macOS `.app` bundle that:
 
 - Navigates to your Maestro worktree directory
-- Resets any uncommitted changes
 - Sets up a Python virtual environment (if needed)
 - Installs npm dependencies
-- Starts the Vite dev server on port 5199
+- Resets `package-lock.json` to avoid uncommitted changes
+- Starts the Vite dev server on a configurable port (default: 5199)
 - Monitors the Electron process and cleans up when you close the window
 
 ## Setup
@@ -23,21 +25,40 @@ This creates a double-clickable macOS `.app` bundle that:
    MAESTRO_WORKTREE_DIR="$HOME/src/worktrees/Maestro/preview"
    ```
 
+   Optionally, you can also customize:
+   - `DESKTOP_APP_PATH` - Install location (default: `~/Desktop/MaestroDev.app`)
+   - `VITE_PORT` - Dev server port (default: `5199`)
+   - `LOG_FILE` - Log file location (default: `$MAESTRO_WORKTREE_DIR/MaestroDev.log`)
+
 2. **Run the installer**
 
    ```bash
    ./install.sh
    ```
 
-   This will copy the launcher to `~/Desktop/Maestro.app`
+   This will copy the launcher to your chosen location (defaulting to `~/Desktop/MaestroDev.app`)
+
+   ```text
+   ./install.sh
+
+   ✅ Installation complete!
+
+   MaestroDev.app has been installed to: /Users/kayvan/Desktop/MaestroDev.app
+   Configured for worktree: /Users/kayvan/src/worktrees/Maestro/preview
+
+   Double-click MaestroDev.app to launch!
+   Logs will be written to: /Users/kayvan/src/worktrees/Maestro/preview/MaestroDev.log
+   ```
 
 3. **Launch Maestro**
 
-   Double-click `Maestro.app` on your Desktop!
+   Double-click `MaestroDev.app` on your Desktop!
+
+   ![Desktop Image](images/desktop.png)
 
 ## Logs
 
-All output is logged to `~/Desktop/MaestroPreview.log` for debugging.
+All output is logged for debugging. The default log location is `MaestroDev.log` inside your worktree directory, but you can customize this in `config.sh`.
 
 ## Requirements
 
@@ -51,17 +72,26 @@ All output is logged to `~/Desktop/MaestroPreview.log` for debugging.
 The `.app` bundle structure:
 
 ```text
-Maestro.app/
+MaestroDev.app/
 ├── Contents/
 │   ├── Info.plist          # App metadata
 │   ├── MacOS/
 │   │   └── launch.sh       # Main launch script
 │   └── Resources/
 │       └── icon.icns       # App icon
+└── config.sh               # Configuration (copied during install)
+
 ```
 
-The launcher reads configuration from `config.sh` at the root of this directory, which is sourced during the build process.
+The launcher reads configuration from `config.sh` which is copied into the app bundle during installation.
+
+## Related Projects
+
+- **[Maestro](https://github.com/pedramamini/Maestro)** - Agent Orchestration Command Center
+- **[Maestro Playbooks](https://github.com/pedramamini/Maestro-Playbooks)** - Collection of playbooks for Maestro
 
 ## License
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+This project is covered by the [MIT License](./LICENSE).
+
+See the main [Maestro repository](https://github.com/pedramamini/Maestro) for Maestro's license information.

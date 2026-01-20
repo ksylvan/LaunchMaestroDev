@@ -17,4 +17,4 @@ VITE_PORT=5199
 
 # Log file location (optional)
 # shellcheck disable=SC2034
-LOG_FILE="$MAESTRO_WORKTREE_DIR/MaestroPreview.log"
+LOG_FILE="$MAESTRO_WORKTREE_DIR/MaestroDev.log"

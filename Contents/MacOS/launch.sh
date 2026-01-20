@@ -9,7 +9,7 @@ export PATH
 source ../../config.sh
 
 # Create log file
-LOG_FILE="${LOG_FILE:-$HOME/Desktop/MaestroPreview.log}"
+LOG_FILE="${LOG_FILE:-$HOME/Desktop/MaestroDev.log}"
 
 # Redirect all output to log file
 exec > "$LOG_FILE" 2>&1
