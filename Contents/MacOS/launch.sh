@@ -24,6 +24,7 @@ fi
 # shellcheck source=/dev/null
 source .venv/bin/activate
 npm install
+npm run build:web # Build web interface assets
 
 # package-lock.json might get updated, reset it
 git checkout -f package-lock.json
