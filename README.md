@@ -20,7 +20,14 @@ This creates a double-clickable macOS `.app` bundle that:
 
 1. **Configure your worktree path**
 
-   Edit `config.sh` and set `MAESTRO_WORKTREE_DIR` to your Maestro worktree location:
+   Copy the example configuration and edit it:
+
+   ```bash
+   cp config-example.sh config.sh
+   # Edit config.sh with your settings
+   ```
+
+   Set `MAESTRO_WORKTREE_DIR` to your Maestro worktree location:
 
    ```bash
    MAESTRO_WORKTREE_DIR="$HOME/src/worktrees/Maestro/preview"
@@ -32,24 +39,24 @@ This creates a double-clickable macOS `.app` bundle that:
    - `VITE_WEB_PORT` - Web interface dev server port (default: `5199`)
    - `LOG_FILE` - Log file location (default: `$MAESTRO_WORKTREE_DIR/MaestroDev.log`)
 
-2. **Run the installer**
+2. **Install the launcher**
 
    ```bash
-   ./install.sh
+   ./maestro-launcher --install
    ```
 
    This will copy the launcher to your chosen location (defaulting to `~/Desktop/MaestroDev.app`)
 
    ```text
-   ./install.sh
+   📦 Creating MaestroDev.app...
 
    ✅ Installation complete!
 
-   MaestroDev.app has been installed to: /Users/kayvan/Desktop/MaestroDev.app
-   Configured for worktree: /Users/kayvan/src/worktrees/Maestro/preview
+      App installed to: /Users/kayvan/Desktop/MaestroDev.app
+      Configured for:   /Users/kayvan/src/worktrees/Maestro/preview
+      Log file:         /Users/kayvan/src/worktrees/Maestro/preview/MaestroDev.log
 
-   Double-click MaestroDev.app to launch!
-   Logs will be written to: /Users/kayvan/src/worktrees/Maestro/preview/MaestroDev.log
+   🚀 Double-click MaestroDev.app to launch!
    ```
 
 3. **Launch Maestro**
@@ -57,6 +64,19 @@ This creates a double-clickable macOS `.app` bundle that:
    Double-click `MaestroDev.app` on your Desktop!
 
    ![Desktop Image](images/desktop.png)
+
+## Managing the Launcher
+
+The `maestro-launcher` CLI provides several commands:
+
+```bash
+./maestro-launcher --install     # Install MaestroDev.app to your Desktop
+./maestro-launcher --uninstall   # Remove MaestroDev.app from your Desktop
+./maestro-launcher --update      # Update existing installation with latest scripts
+./maestro-launcher --help        # Show help message
+```
+
+Use `--update` after pulling new changes from this repository to update your installed app with the latest launcher scripts.
 
 ## Logs
 

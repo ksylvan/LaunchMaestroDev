@@ -1,0 +1,160 @@
+#!/bin/bash
+
+set -e
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Function to show usage
+show_usage() {
+    cat << 'EOF'
+🎼 Maestro Launcher - macOS App Manager
+
+Usage:
+    ./maestro-launcher --install     Install MaestroDev.app to your Desktop
+    ./maestro-launcher --uninstall   Remove MaestroDev.app from your Desktop
+    ./maestro-launcher --update      Update existing MaestroDev.app installation
+    ./maestro-launcher --help        Show this help message
+
+Configuration:
+    Edit config.sh to configure your worktree path and settings.
+    Copy config-example.sh to config.sh if it doesn't exist yet.
+
+EOF
+    exit 0
+}
+
+# Function to load and validate config
+load_config() {
+    if [[ ! -f "$SCRIPT_DIR/config.sh" ]]; then
+        echo "❌ Error: config.sh not found."
+        echo ""
+        echo "Please create config.sh first:"
+        echo "  cp config-example.sh config.sh"
+        echo "  # Edit config.sh with your settings"
+        exit 1
+    fi
+
+    # shellcheck source=/dev/null
+    source "$SCRIPT_DIR/config.sh"
+
+    # Validate that MAESTRO_WORKTREE_DIR is set
+    if [[ -z "$MAESTRO_WORKTREE_DIR" ]]; then
+        echo "❌ Error: MAESTRO_WORKTREE_DIR is not set in config.sh"
+        exit 1
+    fi
+}
+
+# Function to validate worktree
+validate_worktree() {
+    # Check if the worktree directory exists
+    if [[ ! -d "$MAESTRO_WORKTREE_DIR" ]]; then
+        echo "⚠️  Warning: Maestro worktree directory does not exist: $MAESTRO_WORKTREE_DIR"
+        echo "   The launcher will be created, but it won't work until this directory exists."
+        echo ""
+    fi
+
+    # Check if worktree is actually a git worktree
+    if [[ -d "$MAESTRO_WORKTREE_DIR/.git" ]]; then
+        if ! grep -q "gitdir:" "$MAESTRO_WORKTREE_DIR/.git" 2>/dev/null; then
+            echo "⚠️  Warning: $MAESTRO_WORKTREE_DIR appears to be a regular git repo, not a worktree."
+            echo ""
+        fi
+    fi
+}
+
+# Function to install the app
+install_app() {
+    load_config
+    validate_worktree
+
+    # Remove existing app if it exists
+    if [[ -d "$DESKTOP_APP_PATH" ]]; then
+        echo "📦 Removing existing MaestroDev.app..."
+        rm -rf "$DESKTOP_APP_PATH"
+    fi
+
+    # Create the app bundle
+    echo "📦 Creating MaestroDev.app..."
+    mkdir -p "$DESKTOP_APP_PATH/"
+    cp -R "$SCRIPT_DIR/Contents" "$DESKTOP_APP_PATH/"
+    cp "$SCRIPT_DIR/config.sh" "$DESKTOP_APP_PATH/"
+
+    echo ""
+    echo "✅ Installation complete!"
+    echo ""
+    echo "   App installed to: $DESKTOP_APP_PATH"
+    echo "   Configured for:   $MAESTRO_WORKTREE_DIR"
+    echo "   Log file:         ${LOG_FILE:-$MAESTRO_WORKTREE_DIR/MaestroDev.log}"
+    echo ""
+    echo "🚀 Double-click MaestroDev.app to launch!"
+    echo ""
+}
+
+# Function to uninstall the app
+uninstall_app() {
+    load_config
+
+    if [[ ! -d "$DESKTOP_APP_PATH" ]]; then
+        echo "ℹ️  MaestroDev.app is not installed at: $DESKTOP_APP_PATH"
+        exit 0
+    fi
+
+    echo "🗑️  Removing MaestroDev.app from: $DESKTOP_APP_PATH"
+    rm -rf "$DESKTOP_APP_PATH"
+
+    echo ""
+    echo "✅ Uninstallation complete!"
+    echo ""
+}
+
+# Function to update the app
+update_app() {
+    load_config
+
+    if [[ ! -d "$DESKTOP_APP_PATH" ]]; then
+        echo "❌ Error: MaestroDev.app is not installed at: $DESKTOP_APP_PATH"
+        echo ""
+        echo "Run './maestro-launcher --install' first."
+        exit 1
+    fi
+
+    echo "🔄 Updating MaestroDev.app..."
+
+    # Update Contents directory (scripts and resources)
+    echo "   Updating launcher scripts..."
+    rm -rf "$DESKTOP_APP_PATH/Contents"
+    cp -R "$SCRIPT_DIR/Contents" "$DESKTOP_APP_PATH/"
+
+    # Update config.sh
+    echo "   Updating configuration..."
+    cp "$SCRIPT_DIR/config.sh" "$DESKTOP_APP_PATH/"
+
+    echo ""
+    echo "✅ Update complete!"
+    echo ""
+    echo "   Updated app at:   $DESKTOP_APP_PATH"
+    echo "   Configured for:   $MAESTRO_WORKTREE_DIR"
+    echo ""
+}
+
+# Main script logic
+case "${1:-}" in
+    --install)
+        install_app
+        ;;
+    --uninstall)
+        uninstall_app
+        ;;
+    --update)
+        update_app
+        ;;
+    --help|-h|"")
+        show_usage
+        ;;
+    *)
+        echo "❌ Unknown option: $1"
+        echo ""
+        show_usage
+        ;;
+esac
