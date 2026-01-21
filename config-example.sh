@@ -11,9 +11,13 @@ DESKTOP_APP_PATH="$HOME/Desktop/MaestroDev.app"
 # Example: "$HOME/src/worktrees/Maestro/preview"
 MAESTRO_WORKTREE_DIR="$HOME/src/worktrees/Maestro/preview"
 
-# Vite port (optional - defaults to 5199)
+# Vite port for main renderer (optional - defaults to 5198)
 # shellcheck disable=SC2034
-VITE_PORT=5199
+VITE_PORT=5198
+
+# Vite port for web interface (optional - defaults to 5199)
+# shellcheck disable=SC2034
+VITE_WEB_PORT=5199
 
 # Log file location (optional)
 # shellcheck disable=SC2034

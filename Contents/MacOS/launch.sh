@@ -28,11 +28,16 @@ npm install
 # package-lock.json might get updated, reset it
 git checkout -f package-lock.json
 
-# Start the dev server in background
-VITE_PORT="${VITE_PORT:-5199}" npm run dev &
+# Start the main dev server in background
+VITE_PORT="${VITE_PORT:-5198}" npm run dev &
 NPM_PID=$!
 
-echo "Starting dev server (npm PID: $NPM_PID)"
+# Start the web interface dev server in background
+VITE_WEB_PORT="${VITE_WEB_PORT:-5199}" npm run dev:web &
+WEB_PID=$!
+
+echo "Starting dev server (npm PID: $NPM_PID, port: ${VITE_PORT:-5198})"
+echo "Starting web interface server (npm PID: $WEB_PID, port: ${VITE_WEB_PORT:-5199})"
 echo "Waiting for Electron to launch..."
 
 # Wait for Electron to actually start (give it up to 3 minutes)
@@ -55,8 +60,9 @@ done
 
 if [ -z "$ELECTRON_PID" ]; then
   echo "ERROR: Electron failed to start within 3 minutes"
-  echo "Cleaning up npm process and exiting..."
+  echo "Cleaning up dev servers and exiting..."
   kill $NPM_PID 2>/dev/null
+  kill $WEB_PID 2>/dev/null
   pkill -f "worktrees/Maestro/preview"
   exit 1
 fi
@@ -69,8 +75,9 @@ while true; do
   # Check if Electron is still running
   if ! ps -p "$ELECTRON_PID" > /dev/null 2>&1; then
     echo "Electron process (PID: $ELECTRON_PID) has exited"
-    echo "Cleaning up dev server..."
+    echo "Cleaning up dev servers..."
     kill $NPM_PID 2>/dev/null
+    kill $WEB_PID 2>/dev/null
     pkill -f "worktrees/Maestro/preview"
     break
   fi

@@ -12,8 +12,9 @@ This creates a double-clickable macOS `.app` bundle that:
 - Sets up a Python virtual environment (if needed)
 - Installs npm dependencies
 - Resets `package-lock.json` to avoid uncommitted changes
-- Starts the Vite dev server on a configurable port (default: 5199)
-- Monitors the Electron process and cleans up when you close the window
+- Starts the main Vite dev server on a configurable port (default: 5198)
+- Starts the web interface dev server on a configurable port (default: 5199)
+- Monitors the Electron process and cleans up both dev servers when you close the window
 
 ## Setup
 
@@ -27,7 +28,8 @@ This creates a double-clickable macOS `.app` bundle that:
 
    Optionally, you can also customize:
    - `DESKTOP_APP_PATH` - Install location (default: `~/Desktop/MaestroDev.app`)
-   - `VITE_PORT` - Dev server port (default: `5199`)
+   - `VITE_PORT` - Main renderer dev server port (default: `5198`)
+   - `VITE_WEB_PORT` - Web interface dev server port (default: `5199`)
    - `LOG_FILE` - Log file location (default: `$MAESTRO_WORKTREE_DIR/MaestroDev.log`)
 
 2. **Run the installer**
