@@ -22,3 +22,6 @@ VITE_WEB_PORT=5199
 # Log file location (optional)
 # shellcheck disable=SC2034
 LOG_FILE="$MAESTRO_WORKTREE_DIR/MaestroDev.log"
+
+# Claude Code uses this
+export ENABLE_TOOL_SEARCH=true
