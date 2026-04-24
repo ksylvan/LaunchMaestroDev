@@ -65,6 +65,9 @@ npm install
 echo "Building web interface assets..."
 npm run build:web
 
+echo "Building the CLI..."
+npm run build:cli
+
 # package-lock.json might get updated, reset it
 git checkout -f package-lock.json
 
