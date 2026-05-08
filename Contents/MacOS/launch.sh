@@ -18,6 +18,12 @@ exec > "$LOG_FILE" 2>&1
 
 echo "=== Launch started at $(date) ==="
 
+# Check for nvm
+if [ -d "$HOME/.nvm" ]; then
+    # shellcheck source=/dev/null
+    [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && . "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
+fi
+
 # Global variables for PIDs
 NPM_PID=""
 WEB_PID=""
