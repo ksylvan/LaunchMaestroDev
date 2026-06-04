@@ -63,6 +63,57 @@ validate_worktree() {
     fi
 }
 
+# Inject LaunchServices architecture keys into the installed bundle's
+# Info.plist so launchd starts launch.sh under the host's NATIVE cpu type.
+#
+# This bundle's CFBundleExecutable is a shell script, so launchd runs the
+# universal /bin/bash interpreter. With no arch hint, on Apple Silicon it can
+# pick the x86_64 slice — and that x86_64 cpu-type preference is then inherited
+# by every child (npm, node, Electron, the agent shell, and any cmake/clang it
+# spawns), silently producing x86_64 builds on an arm64 machine. Declaring an
+# arm64-first LSArchitecturePriority (+ LSRequiresNativeExecution) makes the
+# whole process tree native. Gated on the HARDWARE flag (hw.optional.arm64),
+# not the possibly-translated shell, so it is a no-op on real Intel hosts.
+configure_app_architecture() {
+    local plist="$DESKTOP_APP_PATH/Contents/Info.plist"
+    local pb="/usr/libexec/PlistBuddy"
+
+    if [[ ! -f "$plist" ]]; then
+        echo "⚠️  Skipping architecture config: $plist not found"
+        return 0
+    fi
+    if [[ ! -x "$pb" ]]; then
+        echo "⚠️  Skipping architecture config: PlistBuddy not available"
+        return 0
+    fi
+
+    # Idempotent: clear any prior keys before (re)writing so --update doesn't
+    # accumulate or conflict.
+    "$pb" -c "Delete :LSArchitecturePriority" "$plist" 2>/dev/null || true
+    "$pb" -c "Delete :LSRequiresNativeExecution" "$plist" 2>/dev/null || true
+
+    if [[ "$(sysctl -n hw.optional.arm64 2>/dev/null || echo 0)" == "1" ]]; then
+        echo "   Configuring native arm64 launch (Apple Silicon)..."
+        # arm64e first: /bin/bash (launch.sh's interpreter) is [x86_64 arm64e],
+        # with no plain arm64 slice. arm64 is listed for other universal
+        # children; x86_64 last as a fallback.
+        "$pb" -c "Add :LSArchitecturePriority array" "$plist"
+        "$pb" -c "Add :LSArchitecturePriority:0 string arm64e" "$plist"
+        "$pb" -c "Add :LSArchitecturePriority:1 string arm64" "$plist"
+        "$pb" -c "Add :LSArchitecturePriority:2 string x86_64" "$plist"
+        "$pb" -c "Add :LSRequiresNativeExecution bool true" "$plist"
+    else
+        echo "   Intel host detected — leaving default launch architecture."
+    fi
+
+    # Refresh LaunchServices so the change takes effect on next launch, even
+    # when --update edited the bundle in place.
+    local lsregister="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"
+    if [[ -x "$lsregister" ]]; then
+        "$lsregister" -f "$DESKTOP_APP_PATH" 2>/dev/null || true
+    fi
+}
+
 # Function to install the app
 install_app() {
     load_config
@@ -79,6 +130,9 @@ install_app() {
     mkdir -p "$DESKTOP_APP_PATH/"
     cp -R "$SCRIPT_DIR/Contents" "$DESKTOP_APP_PATH/"
     cp "$SCRIPT_DIR/config.sh" "$DESKTOP_APP_PATH/"
+
+    # Stamp the architecture keys into the freshly-copied Info.plist.
+    configure_app_architecture
 
     echo ""
     echo "✅ Installation complete!"
@@ -129,6 +183,10 @@ update_app() {
     # Update config.sh
     echo "   Updating configuration..."
     cp "$SCRIPT_DIR/config.sh" "$DESKTOP_APP_PATH/"
+
+    # Re-stamp the architecture keys — the Contents recopy above replaced the
+    # Info.plist with the (key-less) source copy.
+    configure_app_architecture
 
     echo ""
     echo "✅ Update complete!"

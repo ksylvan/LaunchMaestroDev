@@ -2,6 +2,25 @@
 
 set -e
 
+# Force native arm64 on Apple Silicon.
+#
+# This .app's CFBundleExecutable is THIS script, so launchd execs the universal
+# /bin/bash via the shebang. LSArchitecturePriority / LSRequiresNativeExecution
+# in Info.plist select the slice of a Mach-O *app* binary — they do NOT govern a
+# script bundle's shebang interpreter, so /bin/bash can still come up as x86_64
+# (Rosetta). That x86_64 cpu-type preference is then inherited by every child
+# (npm, node, Electron, the agent shell, and any cmake/clang it spawns),
+# silently producing x86_64 builds on an arm64 machine. Re-exec ourselves under
+# `arch -arm64` so the whole process tree is native. Gated on the HARDWARE flag
+# (hw.optional.arm64), so it is a no-op on real Intel hosts; the MAESTRO_NATIVE
+# guard prevents an exec loop.
+if [[ -z "${MAESTRO_NATIVE_REEXEC:-}" \
+      && "$(sysctl -n hw.optional.arm64 2>/dev/null || echo 0)" == "1" \
+      && "$(sysctl -n sysctl.proc_translated 2>/dev/null || echo 0)" == "1" ]]; then
+    export MAESTRO_NATIVE_REEXEC=1
+    exec arch -arm64 /bin/bash "$0" "$@"
+fi
+
 cd "$(dirname "$0")" || exit 1
 
 PATH=/opt/homebrew/bin:"$PATH"
