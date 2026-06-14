@@ -41,6 +41,9 @@ echo "=== Launch started at $(date) ==="
 if [ -d "$HOME/.nvm" ]; then
     # shellcheck source=/dev/null
     [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && . "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
+    # Explicitly activate the default version - sourcing nvm.sh alone does not
+    # update PATH in non-interactive bash, so /opt/homebrew/bin/node would win.
+    nvm use default 2>/dev/null || true
 fi
 
 # Global variables for PIDs
