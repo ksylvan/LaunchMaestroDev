@@ -41,10 +41,20 @@ echo "=== Launch started at $(date) ==="
 if [ -d "$HOME/.nvm" ]; then
     # shellcheck source=/dev/null
     [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && . "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
-    # Explicitly activate the default version - sourcing nvm.sh alone does not
-    # update PATH in non-interactive bash, so /opt/homebrew/bin/node would win.
     nvm use default 2>/dev/null || true
+    # nvm use won't reorder PATH when the version is already present (from launchd
+    # user-session env). The script's own PATH=/opt/homebrew/bin:... prepend then
+    # puts /opt/homebrew/bin/node (v26) ahead of the nvm node (v25). Fix by
+    # explicitly prepending the nvm default bin dir so it wins unconditionally.
+    NVM_DEFAULT_NODE="$(nvm which default 2>/dev/null)"
+    if [ -n "$NVM_DEFAULT_NODE" ] && [ -x "$NVM_DEFAULT_NODE" ]; then
+        export PATH="$(dirname "$NVM_DEFAULT_NODE"):$PATH"
+    fi
+    hash -r 2>/dev/null || true
 fi
+echo "[debug] PATH=$PATH"
+echo "[debug] node: $(command -v node) -> $(node --version 2>/dev/null)"
+echo "[debug] npm:  $(command -v npm) -> $(npm --version 2>/dev/null)"
 
 # Global variables for PIDs
 NPM_PID=""
