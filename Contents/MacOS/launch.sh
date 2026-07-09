@@ -101,7 +101,7 @@ echo "Installing npm dependencies..."
 npm install
 
 echo "Building web interface assets..."
-npm run build:web
+npm run build:web-desktop
 
 echo "Building the CLI..."
 npm run build:cli
@@ -116,7 +116,7 @@ NPM_PID=$!
 
 # Start the web interface dev server in background
 echo "Starting web interface server (port: ${VITE_WEB_PORT:-5199})..."
-VITE_WEB_PORT="${VITE_WEB_PORT:-5199}" npm run dev:web &
+VITE_WEB_PORT="${VITE_WEB_PORT:-5199}" npm run dev:web-desktop &
 WEB_PID=$!
 
 echo "Dev servers started:"
